@@ -34,7 +34,14 @@ class ApiService {
   }
 
   // Add Expense
-  static Future<Map<String, dynamic>> addExpense(String token, double amount, String category, String date, String notes) async {
+  static Future<Map<String, dynamic>> addExpense(
+      String token,
+      String title, // New field
+      double amount,
+      String category,
+      String date,
+      String notes,
+      ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/expenses'),
       headers: {
@@ -42,6 +49,7 @@ class ApiService {
         'Authorization': token,
       },
       body: jsonEncode({
+        'title': title, // New field
         'amount': amount,
         'category': category,
         'date': date,
@@ -55,7 +63,6 @@ class ApiService {
       throw Exception('Failed to add expense');
     }
   }
-
   // Get Expenses
   static Future<List<dynamic>> getExpenses(String token) async {
     final response = await http.get(
