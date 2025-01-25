@@ -13,9 +13,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   late var _isLogin = true;
 
   Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     try {
       if (_isLogin) {
         // Handle login
@@ -62,57 +66,89 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Container(
-                  width: 200,
-                  child: Image.asset('assets/images/Sample_User_Icon.png')),
-              Card(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      if (!_isLogin)
-                        TextField(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Container(
+                    width: 200,
+                    child: Image.asset('assets/images/Sample_User_Icon.png')),
+                Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        TextFormField(
                           controller: _usernameController,
                           decoration: InputDecoration(labelText: 'Username'),
-                        ),
-                      TextField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                        ),
-                      ),
-                      TextField(
-                        controller: _passwordController,
-                        decoration: InputDecoration(labelText: 'Password'),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      ElevatedButton(
-                        onPressed: _login,
-                        child: Text(
-                          _isLogin ? 'Log in' : 'Sign up',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primaryContainer),
-                      ),
-                      TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLogin = !_isLogin;
-                            });
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter a username';
+                            }
+                            return null;
                           },
-                          child: Text(_isLogin
-                              ? 'Don\'t have an account? Sign Up'
-                              : 'Already have an account? Login')),
-                    ],
+                        ),
+                        if (!_isLogin)
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.none,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter an email address';
+                              }
+                              if (!value.contains('@')) {
+                                return 'Please enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                        TextFormField(
+                          controller: _passwordController,
+                          decoration: InputDecoration(labelText: 'Password'),
+                          obscureText: true,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter a password';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters long';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        ElevatedButton(
+                          onPressed: _login,
+                          child: Text(
+                            _isLogin ? 'Log in' : 'Sign up',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer),
+                        ),
+                        TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isLogin = !_isLogin;
+                              });
+                            },
+                            child: Text(_isLogin
+                                ? 'Don\'t have an account? Sign Up'
+                                : 'Already have an account? Login')),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),
