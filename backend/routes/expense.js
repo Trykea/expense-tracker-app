@@ -4,27 +4,17 @@ const db = require("../database.js");
 
 // Add a new expense
 router.post("/", (req, res) => {
-  const { amount, category, date, notes } = req.body;
-  const userId = req.user.id;
+  const { userId, title, amount, category, date, notes } = req.body;
 
-  // Validate input
-  if (!amount || isNaN(amount)) {
-    return res.status(400).json({ error: "Amount must be a valid number" });
+  if (!userId || !title || !amount || !category || !date) {
+    return res.status(400).json({
+      error: "userId, title, amount, category, and date are required",
+    });
   }
-  if (!category || typeof category !== "string") {
-    return res
-      .status(400)
-      .json({ error: "Category is required and must be a string" });
-  }
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return res.status(400).json({ error: "Date must be in YYYY-MM-DD format" });
-  }
-
-  const notesValue = notes || null; // Handle optional notes field
 
   db.run(
-    "INSERT INTO EXPENSE (USER_ID, AMOUNT, CATEGORY, DATE, NOTES) VALUES (?, ?, ?, ?, ?)",
-    [userId, amount, category, date, notesValue],
+    "INSERT INTO EXPENSE (USER_ID, TITLE, AMOUNT, CATEGORY, DATE, NOTES) VALUES (?, ?, ?, ?, ?, ?)",
+    [userId, title, amount, category, date, notes],
     function (err) {
       if (err) {
         console.error("Database error:", err.message);
@@ -41,13 +31,17 @@ router.post("/", (req, res) => {
 router.get("/", (req, res) => {
   const userId = req.user.id;
 
-  db.all("SELECT * FROM EXPENSE WHERE USER_ID = ?", [userId], (err, rows) => {
-    if (err) {
-      console.error("Database error:", err.message);
-      return res.status(500).json({ error: "Failed to fetch expenses" });
+  db.all(
+    "SELECT ID, TITLE, AMOUNT, CATEGORY, DATE, NOTES FROM EXPENSE WHERE USER_ID = ?",
+    [userId],
+    (err, rows) => {
+      if (err) {
+        console.error("Database error:", err.message);
+        return res.status(500).json({ error: "Failed to fetch expenses" });
+      }
+      res.json(rows);
     }
-    res.json(rows);
-  });
+  );
 });
 
 // Delete an expense
