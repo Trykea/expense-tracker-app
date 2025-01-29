@@ -21,13 +21,14 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     try {
+      String token;
       if (_isLogin) {
         // Handle login
         final response = await ApiService.login(
           _usernameController.text,
           _passwordController.text,
         );
-        final token = response['token'];
+        token = response['token'];
         print('Token: $token');
       } else {
         // Handle signup
@@ -36,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text,
           _passwordController.text,
         );
-        final token =
+         token =
             response['token']; // Ensure this matches the backend response
         print('Token: $token');
       }
@@ -45,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ExpenseScreen(),
+          builder: (context) => ExpenseScreen(token: token,),
         ),
       );
     } catch (e) {

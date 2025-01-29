@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'model/expense.dart';
+
 class ApiService {
-  static const String baseUrl = 'http://172.16.0.114:3000';
+  static const String baseUrl = 'http://172.16.1.123:3000';
 
   // Login
   static Future<Map<String, dynamic>> login(String username, String password) async {
@@ -64,7 +66,7 @@ class ApiService {
     }
   }
   // Get Expenses
-  static Future<List<dynamic>> getExpenses(String token) async {
+  static Future<List<Expense>> getExpenses(String token) async {
     final response = await http.get(
       Uri.parse('$baseUrl/expenses'),
       headers: {
@@ -74,11 +76,14 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      List<dynamic> jsonResponse = jsonDecode(response.body);
+      List<Expense> expenses = jsonResponse.map((data) => Expense.fromJson(data)).toList();
+      return expenses; // Convert JSON to List<Expense>
     } else {
       throw Exception('Failed to fetch expenses');
     }
   }
+
 
   // Delete Expense
   static Future<void> deleteExpense(String token, int id) async {
