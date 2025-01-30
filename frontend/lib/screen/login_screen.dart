@@ -37,16 +37,20 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text,
           _passwordController.text,
         );
-         token =
-            response['token']; // Ensure this matches the backend response
+        token = response['token']; // Ensure this matches the backend response
         print('Token: $token');
       }
-
+      // _usernameController.text = '';
+      // _emailController.text = '';
+      // _passwordController.text = '';
+      _isLogin = true;
       // Navigate to the next screen
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ExpenseScreen(token: token,),
+          builder: (context) => ExpenseScreen(
+            token: token,
+          ),
         ),
       );
     } catch (e) {

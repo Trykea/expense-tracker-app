@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screen/add_expense_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:frontend/screen/add_expense_screen.dart';
 import 'package:frontend/api_service.dart';
 import 'package:frontend/model/expense.dart';
+import 'package:frontend/widget/expense_card.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 class ExpenseScreen extends StatefulWidget {
   ExpenseScreen({super.key, required this.token});
 
-  String token;
+  final String token;
 
   @override
   State<ExpenseScreen> createState() => _ExpenseScreenState();
@@ -15,7 +17,10 @@ class ExpenseScreen extends StatefulWidget {
 
 class _ExpenseScreenState extends State<ExpenseScreen> {
   List<Expense> expenses = [];
+  List<Expense> filteredExpenses = [];
   bool isLoading = true;
+  DateTime selectedMonth = DateTime.now();
+  bool _isFiltered = false;
 
   @override
   void initState() {
@@ -25,130 +30,131 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   Future<void> _fetchExpense() async {
     try {
-      String token = widget.token;
-      List<Expense> fetchedExpenses = await ApiService.getExpenses(token);
+      List<Expense> fetchedExpenses =
+          await ApiService.getExpenses(widget.token);
       setState(() {
         expenses = fetchedExpenses;
-        isLoading = false; // Set loading to false after data is fetched
+        filteredExpenses = List.from(fetchedExpenses);
+        isLoading = false;
+        _isFiltered = false;
       });
     } catch (e) {
       print('Error: $e');
     }
   }
 
+  void _filterExpensesByMonth(DateTime month) {
+    setState(() {
+      filteredExpenses = expenses.where((expense) {
+        DateTime expenseDate = DateTime.parse(expense.date);
+        return expenseDate.year == month.year &&
+            expenseDate.month == month.month;
+      }).toList();
+      _isFiltered = true;
+    });
+  }
+
+  void _showMonthPickerModal(BuildContext context) async {
+    DateTime now = DateTime.now();
+    DateTime? selectedMonth = await showMonthPicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      initialDate: now,
+    );
+
+    if (selectedMonth != null) {
+      _filterExpensesByMonth(selectedMonth);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Expense list'),
-      ),
-      body: ListView.builder(
-        itemCount: expenses.length,
-        itemBuilder: (context, index) {
-          final expense = expenses[index];
-          return Card(
-            elevation: 6,
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Circle Avatar with Amount
-                  CircleAvatar(
-                    radius: 30,
-                    child: Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Text(expense.amount.toString()),
-                    ),
-                  ),
-                  // Expense details
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 1),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Text(
-                            expense.title,
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 40),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Text(expense.date),
-                              Text(expense.category),
-                            ],
-                          ),
-                          SizedBox(height: 20),
-                          Text(expense.notes.toString()),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Delete and Edit buttons
-                  Column(
-                    children: [
-                      SizedBox(
-                          // width: 80.0, // Fixed width for both buttons
-                          height: 50.0, // Same height for both buttons
-                          child: OutlinedButton(
-                            onPressed: () {},
-                            style: OutlinedButton.styleFrom(
-                              // backgroundColor: Colors.red,
-                              side: BorderSide(color: Colors.red),
-                              // Border color
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    30.0), // Rounded corners
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.delete,
-                              color: Colors.red,
-                            ),
-                          )),
-                      SizedBox(
-                        height: 6,
-                      ),
-                      SizedBox(
-                          height: 50.0,
-                          child: OutlinedButton(
-                            onPressed: () {},
-                            style: OutlinedButton.styleFrom(
-                              // backgroundColor: Colors.blue,
-                              side: BorderSide(color: Colors.blueAccent),
-                              // Border color
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30.0),
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.edit,
-                              color: Colors.blueAccent,
-                            ),
-                          )),
-                    ],
-                  ),
-                ],
-              ),
+        title: const Text('Expense List'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.logout), // Change to your desired icon
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          if (_isFiltered)
+            IconButton(
+              icon: Icon(Icons.filter_alt_off),
+              onPressed: _fetchExpense,
+              // padding: EdgeInsets.only(right: 20),
             ),
-          );
-        },
+          IconButton(
+            icon: Icon(Icons.date_range),
+            onPressed: () {
+              _showMonthPickerModal(context);
+            },
+            padding: EdgeInsets.only(right: 20),
+
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => AddExpenseScreen(
-              token: widget.token,
-              userId: expenses[0].userId,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : filteredExpenses.isEmpty
+              ? const Center(child: Text("No expenses for this month"))
+              : ListView.builder(
+                  itemCount: filteredExpenses.length,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  itemBuilder: (context, index) {
+                    final expense = filteredExpenses.reversed
+                        .toList()[index]; // Reverse the list
+                    return ExpenseCard(
+                      expense: expense,
+                      onEdit: () {
+                        // Edit action
+                      },
+                      onDelete: () {
+                        // Delete action
+                      },
+                    );
+                  },
+                ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (_isFiltered)
+            FloatingActionButton.extended(
+              onPressed: ()  {
+
+              },
+              icon: const Icon(Icons.sort),
+              label: const Text("Display as grid"),
             ),
-          ));
-        },
-        child: const Icon(Icons.add),
+          if (_isFiltered)
+            SizedBox(
+              height: 12,
+            ),
+          FloatingActionButton.extended(
+            onPressed: () async {
+              final result = await Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => AddExpenseScreen(
+                  token: widget.token,
+                  userId: expenses[0].userId,
+                ),
+              ));
+
+              if (result == true) {
+                _fetchExpense();
+              }
+            },
+            icon: const Icon(Icons.add),
+            label: const Text("Add Expense"),
+          ),
+        ],
       ),
     );
   }
