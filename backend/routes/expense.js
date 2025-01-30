@@ -15,6 +15,7 @@ router.post("/", (req, res) => {
   db.run(
     "INSERT INTO EXPENSE (USER_ID, TITLE, AMOUNT, CATEGORY, DATE, NOTES) VALUES (?, ?, ?, ?, ?, ?)",
     [userId, title, amount, category, date, notes],
+    console.log(userId, title, amount, category, date, notes),
     function (err) {
       if (err) {
         console.error("Database error:", err.message);
@@ -32,7 +33,7 @@ router.get("/", (req, res) => {
   const userId = req.user.id;
 
   db.all(
-    "SELECT ID, TITLE, AMOUNT, CATEGORY, DATE, NOTES FROM EXPENSE WHERE USER_ID = ?",
+    "SELECT ID,USER_ID, TITLE, AMOUNT, CATEGORY, DATE, NOTES FROM EXPENSE WHERE USER_ID = ?",
     [userId],
     (err, rows) => {
       if (err) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screen/add_expense_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:frontend/api_service.dart';
 import 'package:frontend/model/expense.dart';
@@ -78,8 +79,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Text(DateFormat('dd/MM/yyyy')
-                                  .format(expense.date)),
+                              Text(expense.date),
                               Text(expense.category),
                             ],
                           ),
@@ -123,8 +123,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                               side: BorderSide(color: Colors.blueAccent),
                               // Border color
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    30.0),
+                                borderRadius: BorderRadius.circular(30.0),
                               ),
                             ),
                             child: Icon(
@@ -139,6 +138,17 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => AddExpenseScreen(
+              token: widget.token,
+              userId: expenses[0].userId,
+            ),
+          ));
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
