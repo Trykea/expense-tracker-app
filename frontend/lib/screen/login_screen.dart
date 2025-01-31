@@ -3,7 +3,7 @@ import 'package:frontend/api_service.dart';
 import 'package:frontend/screen/expense_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({super.key});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -29,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordController.text,
         );
         token = response['token'];
-        print('Token: $token');
       } else {
         // Handle signup
         final response = await ApiService.signup(
@@ -38,11 +37,10 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordController.text,
         );
         token = response['token']; // Ensure this matches the backend response
-        print('Token: $token');
       }
-      // _usernameController.text = '';
-      // _emailController.text = '';
-      // _passwordController.text = '';
+      _usernameController.text = '';
+      _emailController.text = '';
+      _passwordController.text = '';
       _isLogin = true;
       // Navigate to the next screen
       Navigator.push(
@@ -54,7 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     } catch (e) {
-      print('Error: $e');
       // Show an error message to the user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -66,11 +63,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: const Text('Login or Signup')),
+        title:  const Center(child: Text('Login or Signup')),
       ),
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Form(
             key: _formKey,
             child: Column(

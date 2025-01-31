@@ -126,11 +126,46 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                         return ExpenseCard(
                           expense: expense,
                           onEdit: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Function not availble yet')),
+                            );
+                          },
+                          onDelete: () async {
+                            // Show confirmation dialog
+                            final confirmDelete = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Confirm Deletion'),
+                                content: const Text('Are you sure you want to delete this expense?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
 
+
+                            if (confirmDelete == true) {
+                              try {
+                                await ApiService.deleteExpense(widget.token, expense.id);
+                                _fetchExpense();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Expense deleted successfully')),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Failed to delete expense')),
+                                );
+                              }
+                            }
                           },
-                          onDelete: () {
-                            // Delete action
-                          },
+
                         );
                       },
                     ),
