@@ -1,5 +1,5 @@
 class Expense {
-  int id;
+  final int? id;
   int userId;
   String title;
   double amount;
@@ -9,7 +9,7 @@ class Expense {
 
   Expense(
       {
-        this.id = 0,
+        this.id,
       required this.userId,
       required this.title,
       required this.amount,
@@ -29,13 +29,26 @@ class Expense {
     );
   }
   Map<String, dynamic> toJson(){
-    return {
-      'userId': userId,
-      'title': title,
-      'amount': amount,
-      'category': category,
-      'date': date, // Convert DateTime to ISO string
-      'notes': notes,
-    };
+    if (id == null) {
+      return {
+        'userId': userId,
+        'title': title,
+        'amount': amount,
+        'category': category,
+        'date': date, // Convert DateTime to ISO string
+        'notes': notes,
+      };
+    }
+    else{
+      return {
+        'id' : id,
+        'userId': userId,
+        'title': title,
+        'amount': amount,
+        'category': category,
+        'date': date, // Convert DateTime to ISO string
+        'notes': notes,
+      };
+    }
   }
 }

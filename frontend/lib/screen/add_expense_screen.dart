@@ -6,8 +6,10 @@ import 'package:frontend/api_service.dart';
 class AddExpenseScreen extends StatefulWidget {
   final String token;
   final int userId;
+  final Expense? editExpense;
   const AddExpenseScreen({
     Key? key,
+    this.editExpense,
     required this.token,
     required this.userId,
   }) : super(key: key);
@@ -40,6 +42,33 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       setState(() => _selectedDate = pickedDate);
     }
   }
+  @override
+  void initState() {
+    super.initState();
+    if (widget.editExpense!= null) {
+      _loadExpense(widget.editExpense!);
+    }
+  }
+  Future<void> _loadExpense(Expense editExpense) async {
+    try {
+      setState(() {
+        _enteredTitle = editExpense.title;
+        _selectedAmount = editExpense.amount;
+        _selectedCategory = editExpense.category;
+        _selectedDate = DateFormat('yyyy-MM-dd').parse(editExpense.date);
+        _enteredNotes = editExpense.notes ?? '';
+        // Set text controllers to reflect the loaded data
+        _titleController.text = _enteredTitle;
+        _amountController.text = _selectedAmount.toString();
+        _notesController.text = _enteredNotes;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load expense')),
+      );
+    }
+  }
 
   Future<void> _addExpense() async {
     if (!_formKey.currentState!.validate()) return;
@@ -52,20 +81,37 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       date: DateFormat('yyyy-MM-dd').format(_selectedDate),
       notes: _enteredNotes,
     );
-
-    try {
-      await ApiService.addExpense(widget.token, expense);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Expense added successfully')),
-      );
-      Navigator.pop(context, true);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add expense')),
-      );
+    if (widget.editExpense == null) {
+      try {
+        await ApiService.addExpense(widget.token, expense);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Expense added successfully')),
+        );
+        Navigator.pop(context, true);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to add expense')),
+        );
+      }
     }
+    else {
+      try {
+        await ApiService.updateExpense(widget.token, widget.editExpense!.id!, expense );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Expense updated successfully')),
+        );
+        Navigator.pop(context, true);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update expense')),
+        );
+      }
+    }
+
   }
 
   @override

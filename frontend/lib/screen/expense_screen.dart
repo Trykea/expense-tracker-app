@@ -51,13 +51,12 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       filteredExpenses = expenses.where((expense) {
         DateTime expenseDate = DateTime.parse(expense.date);
         print('Expense Date: ${expenseDate.year}-${expenseDate.month}');
-        return expenseDate.year == month.year && expenseDate.month == month.month;
+        return expenseDate.year == month.year &&
+            expenseDate.month == month.month;
       }).toList();
       _isFiltered = true;
     });
   }
-
-
 
   void _showMonthPickerModal(BuildContext context) async {
     DateTime? pickedMonth = await showMonthPicker(
@@ -74,7 +73,6 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -125,10 +123,19 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                             .toList()[index]; // Reverse the list
                         return ExpenseCard(
                           expense: expense,
-                          onEdit: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Function not availble yet')),
-                            );
+                          onEdit: () async {
+                            final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddExpenseScreen(
+                                    token: widget.token,
+                                    userId: expense.userId,
+                                    editExpense: expense,
+                                  ),
+                                ));
+                            if (result == true) {
+                              _fetchExpense();
+                            }
                           },
                           onDelete: () async {
                             // Show confirmation dialog
@@ -136,36 +143,42 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
                               context: context,
                               builder: (ctx) => AlertDialog(
                                 title: const Text('Confirm Deletion'),
-                                content: const Text('Are you sure you want to delete this expense?'),
+                                content: const Text(
+                                    'Are you sure you want to delete this expense?'),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(false),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
                                     child: const Text('Cancel'),
                                   ),
                                   TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(true),
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
                                     child: const Text('Delete'),
                                   ),
                                 ],
                               ),
                             );
 
-
                             if (confirmDelete == true) {
                               try {
-                                await ApiService.deleteExpense(widget.token, expense.id);
+                                await ApiService.deleteExpense(
+                                    widget.token, expense.id!);
                                 _fetchExpense();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Expense deleted successfully')),
+                                  const SnackBar(
+                                      content:
+                                          Text('Expense deleted successfully')),
                                 );
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Failed to delete expense')),
+                                  const SnackBar(
+                                      content:
+                                          Text('Failed to delete expense')),
                                 );
                               }
                             }
                           },
-
                         );
                       },
                     ),

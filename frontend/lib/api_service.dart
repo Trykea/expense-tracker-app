@@ -43,8 +43,11 @@ class ApiService {
   // Add Expense
   static Future<Map<String, dynamic>> addExpense(
     String token,
-    Expense expense, // Pass the Expense model instead of individual fields
+    Expense expense,
+      // Pass the Expense model instead of individual fields
   ) async {
+
+
     final response = await http.post(
       Uri.parse('$baseUrl/expenses'),
       headers: {
@@ -100,4 +103,30 @@ class ApiService {
       throw Exception('Failed to delete expense');
     }
   }
+  //update expense
+  static Future<Map<String, dynamic>> updateExpense(
+      String token,
+      int expenseId, // The ID of the expense to be updated
+      Expense expense, // The updated Expense model
+      ) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/expenses/$expenseId'), // URL with the expense ID
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': '$token', // Use Bearer for the token
+      },
+      body: jsonEncode(expense.toJson()), // Pass the updated expense model
+    );
+
+    print('Response status: ${response.statusCode}');
+    print(jsonEncode(expense.toJson()));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      print(response.body);
+      throw Exception('Failed to update expense');
+    }
+  }
+
 }
