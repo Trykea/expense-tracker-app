@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'model/expense.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://172.16.0.247:3000';
+  static const String baseUrl = 'http://192.168.0.106:3000';
 
   // Login
   static Future<Map<String, dynamic>> login(

@@ -4,6 +4,7 @@ import 'package:frontend/screen/add_expense_screen.dart';
 import 'package:frontend/api_service.dart';
 import 'package:frontend/model/expense.dart';
 import 'package:frontend/widget/expense_card.dart';
+import 'package:frontend/widget/monthly_expense_grid.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 class ExpenseScreen extends StatefulWidget {
@@ -18,9 +19,10 @@ class ExpenseScreen extends StatefulWidget {
 class _ExpenseScreenState extends State<ExpenseScreen> {
   List<Expense> expenses = [];
   List<Expense> filteredExpenses = [];
-  bool isLoading = true;
+  bool _isLoading = true;
   DateTime selectedMonth = DateTime.now();
   bool _isFiltered = false;
+  bool _showGridView = false;
 
   @override
   void initState() {
@@ -35,7 +37,7 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
       setState(() {
         expenses = fetchedExpenses;
         filteredExpenses = List.from(fetchedExpenses);
-        isLoading = false;
+        _isLoading = false;
         _isFiltered = false;
       });
     } catch (e) {
@@ -45,28 +47,34 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
 
   void _filterExpensesByMonth(DateTime month) {
     setState(() {
+      print('Filtering for Month: ${month.year}-${month.month}');
       filteredExpenses = expenses.where((expense) {
         DateTime expenseDate = DateTime.parse(expense.date);
-        return expenseDate.year == month.year &&
-            expenseDate.month == month.month;
+        print('Expense Date: ${expenseDate.year}-${expenseDate.month}');
+        return expenseDate.year == month.year && expenseDate.month == month.month;
       }).toList();
       _isFiltered = true;
     });
   }
 
+
+
   void _showMonthPickerModal(BuildContext context) async {
-    DateTime now = DateTime.now();
-    DateTime? selectedMonth = await showMonthPicker(
+    DateTime? pickedMonth = await showMonthPicker(
       context: context,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
-      initialDate: now,
+      initialDate: selectedMonth, // Use selectedMonth as initial date
     );
 
-    if (selectedMonth != null) {
-      _filterExpensesByMonth(selectedMonth);
+    if (pickedMonth != null) {
+      setState(() {
+        selectedMonth = DateTime(pickedMonth.year, pickedMonth.month, 1);
+        _filterExpensesByMonth(selectedMonth);
+      });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -96,43 +104,49 @@ class _ExpenseScreenState extends State<ExpenseScreen> {
               _showMonthPickerModal(context);
             },
             padding: EdgeInsets.only(right: 20),
-
           ),
         ],
       ),
-      body: isLoading
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : filteredExpenses.isEmpty
               ? const Center(child: Text("No expenses for this month"))
-              : ListView.builder(
-                  itemCount: filteredExpenses.length,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  itemBuilder: (context, index) {
-                    final expense = filteredExpenses.reversed
-                        .toList()[index]; // Reverse the list
-                    return ExpenseCard(
-                      expense: expense,
-                      onEdit: () {
-                        // Edit action
+              : _showGridView && _isFiltered
+                  ? MonthlyExpenseGrid(
+                      expenses: filteredExpenses,
+                      selectedMonth: selectedMonth,
+                    )
+                  : ListView.builder(
+                      itemCount: filteredExpenses.length,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      itemBuilder: (context, index) {
+                        final expense = filteredExpenses.reversed
+                            .toList()[index]; // Reverse the list
+                        return ExpenseCard(
+                          expense: expense,
+                          onEdit: () {
+
+                          },
+                          onDelete: () {
+                            // Delete action
+                          },
+                        );
                       },
-                      onDelete: () {
-                        // Delete action
-                      },
-                    );
-                  },
-                ),
+                    ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (_isFiltered)
             FloatingActionButton.extended(
-              onPressed: ()  {
-
+              onPressed: () {
+                setState(() {
+                  _showGridView = !_showGridView;
+                });
               },
-              icon: const Icon(Icons.sort),
-              label: const Text("Display as grid"),
+              icon: Icon(_showGridView ? Icons.list : Icons.grid_view),
+              label: Text(_showGridView ? "Show List" : "Show Grid"),
             ),
           if (_isFiltered)
             SizedBox(

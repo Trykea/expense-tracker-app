@@ -1,5 +1,5 @@
 class Expense {
-
+  int id;
   int userId;
   String title;
   double amount;
@@ -9,6 +9,7 @@ class Expense {
 
   Expense(
       {
+        this.id = 0,
       required this.userId,
       required this.title,
       required this.amount,
@@ -18,6 +19,7 @@ class Expense {
 
   factory Expense.fromJson(Map<String, dynamic> json) {
     return Expense(
+      id: json['ID'],
       userId: json['USER_ID'],
       title: json['TITLE'],
       amount: json['AMOUNT'].toDouble(),
